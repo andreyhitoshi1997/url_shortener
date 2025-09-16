@@ -1,5 +1,5 @@
-import { insertUrl } from './src/controllers/insert';
-import { searchUrl } from './src/controllers/search';
+import { insertUrl } from './src/usecases/insert';
+import { searchUrl } from './src/usecases/search';
 import { Elysia as App } from 'elysia';
 
 const app = new App();

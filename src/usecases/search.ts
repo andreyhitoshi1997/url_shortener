@@ -1,4 +1,4 @@
-import { findTargetByShortRef } from '../usecases/find_short_ref';
+import { findTargetByShortRef } from './find_short_ref';
 import { closeDbConnection } from '../db/close_db';
 
 export async function searchUrl({ query }: { query: { shortRef?: string } }) {

@@ -1,4 +1,4 @@
-import { userAlreadyExists, insertUser } from '../usecases/insert_url_shortener';
+import { userAlreadyExists, insertUser } from './insert_url_shortener';
 import { closeDbConnection } from '../db/close_db';
 
 export async function insertUrl({ body }: { body: { shortRef?: string, targetRef?: string } }) {
