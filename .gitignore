@@ -1,0 +1,7 @@
+# dependencies (bun install)
+/node_modules/
+/drizzle/
+/@eslint/
+
+# dotenv environment variable files
+.env
