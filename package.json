@@ -3,6 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start": "bun run index.ts"
+  },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
     "@types/bun": "latest",
