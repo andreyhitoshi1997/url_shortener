@@ -5,13 +5,14 @@ import { Elysia as App } from 'elysia';
 const app = new App();
 
 app.post('/api/shorten', async ({ body, set }) => {
-    const response = await insertUrl.handle({ body });
+    const response = await insertUrl.handle({ query: { shortRef: undefined, targetRef: undefined }, body });
     set.status = response.statusCode;
     return response.body;
 });
 
 app.get('/api/', async ({ query, set }) => {
-    const response = await searchUrl.handle({ query });
+    const { shortRef, targetRef } = query as { shortRef: any; targetRef: any };
+    const response = await searchUrl.handle({ query: { shortRef, targetRef } });
     set.status = response.statusCode;
     return response.body;
 });

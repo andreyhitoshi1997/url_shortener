@@ -1,8 +1,8 @@
 import { findTargetByShortRef } from '../usecases/find_short_ref';
 import { closeDbConnection } from '../db/close_db';
-import type { Controller } from '../protocols/http';
 import type { HttpResponse, HttpRequest } from '../protocols/http';
 import { notFound, ok } from '../helpers/http-helpers';
+import type { Controller } from '../protocols/controller';
 
 export class SearchController implements Controller {
     async handle(request: HttpRequest): Promise<HttpResponse> {

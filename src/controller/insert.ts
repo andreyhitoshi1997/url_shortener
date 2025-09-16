@@ -3,12 +3,12 @@ import {
   insertUser,
 } from "../usecases/insert_url_shortener";
 import { closeDbConnection } from "../db/close_db";
-import type { Controller } from "../protocols/http-protocol";
 import type { HttpResponse, HttpRequest } from "../protocols/http";
 import { badRequest, created } from "../helpers/http-helpers";
 import { MissingParamError } from "../errors";
+import type { Controller } from "../protocols/controller";
 
-export class InsertController implements Controller {
+export class InsertController implements Controller{
   async handle(request: HttpRequest): Promise<HttpResponse> {
     const { shortRef, targetRef } = request.body;
     for (const field of ["shortRef", "targetRef"]) {
@@ -22,7 +22,9 @@ export class InsertController implements Controller {
 
     if (!exists.error) {
       await closeDbConnection();
-      return badRequest(new Error("Combination of shortRef and targetRef already exists"));
+      return badRequest(
+        new Error("Combination of shortRef and targetRef already exists")
+      );
     }
 
     const inserted = await insertUser(shortRef, targetRef);
