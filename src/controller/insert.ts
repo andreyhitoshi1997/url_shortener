@@ -4,7 +4,7 @@ import {
 } from "../usecases/insert_url_shortener";
 import { closeDbConnection } from "../db/close_db";
 import type { Controller } from "../protocols/http-protocol";
-import type { HttpResponse, HttpRequest } from "../protocol/http";
+import type { HttpResponse, HttpRequest } from "../protocols/http";
 import { badRequest, created } from "../helpers/http-helpers";
 import { MissingParamError } from "../errors";
 

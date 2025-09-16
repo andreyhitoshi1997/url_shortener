@@ -4,5 +4,6 @@ export interface HttpResponse {
 }
 
 export interface HttpRequest {
+  query: { shortRef: any; targetRef: any }
   body?: any
 }

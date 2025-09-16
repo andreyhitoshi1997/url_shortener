@@ -1,5 +1,5 @@
 import { type HttpResponse } from '../protocols/http'
-import { ServerError as ServerErrorClass } from '../errors/server-error'
+import { ServerError } from '../errors'
 
 export const badRequest = (error: Error | { [key: string]: any }): HttpResponse => ({
   statusCode: 400,
@@ -13,7 +13,7 @@ export const notFound = (error: Error | { [key: string]: any }): HttpResponse =>
 
 export const serverError = (): HttpResponse => ({
   statusCode: 500,
-  body: { error: new ServerErrorClass().message }
+  body: { error: ServerError }
 })
 
 export const ok = (data: any): HttpResponse => ({
