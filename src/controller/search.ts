@@ -6,14 +6,19 @@ import type { Controller } from '../protocols/controller';
 
 export class SearchController implements Controller {
     async handle(request: HttpRequest): Promise<HttpResponse> {
-        const { shortRef,targetRef } = request.query;
+        const { shortRef } = request.query;
+        
+        if (!shortRef) {
+            await closeDbConnection();
+            return notFound({ message: 'Short reference is required' });
+        }
     
         const result = await findTargetByShortRef(shortRef);
         await closeDbConnection();
         if (!result) {
             return notFound({ message: 'Short reference not found' });
         }
-        return ok(result)
+        return ok({ targetRef: result });
     }
 }
 

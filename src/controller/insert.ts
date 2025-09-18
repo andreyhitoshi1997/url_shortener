@@ -7,18 +7,46 @@ import type { HttpResponse, HttpRequest } from "../protocols/http";
 import { badRequest, created } from "../helpers/http-helpers";
 import { MissingParamError } from "../errors";
 import type { Controller } from "../protocols/controller";
+import { validateAndNormalizeUrl, generateShortRef } from "../helpers/url-helpers";
 
 export class InsertController implements Controller{
   async handle(request: HttpRequest): Promise<HttpResponse> {
     const { shortRef, targetRef } = request.body;
-    for (const field of ["shortRef", "targetRef"]) {
-      if (!request.body[field]) {
+    
+    if (!targetRef) {
+      await closeDbConnection();
+      return badRequest(new MissingParamError("targetRef"));
+    }
+
+    const urlValidation = validateAndNormalizeUrl(targetRef);
+    if (!urlValidation.isValid) {
+      await closeDbConnection();
+      return badRequest(new Error(`Invalid URL: ${urlValidation.error}`));
+    }
+
+    const normalizedTargetRef = urlValidation.normalizedUrl!;
+    
+    let finalShortRef = shortRef;
+    if (!finalShortRef) {
+      finalShortRef = generateShortRef();
+      
+      let attempts = 0;
+      while (attempts < 10) {
+        const exists = await userAlreadyExists(finalShortRef, normalizedTargetRef);
+        if (exists.error) {
+          break;
+        }
+        finalShortRef = generateShortRef();
+        attempts++;
+      }
+      
+      if (attempts >= 10) {
         await closeDbConnection();
-        return badRequest(new MissingParamError(field));
+        return badRequest(new Error("Unable to generate unique short reference"));
       }
     }
 
-    const exists = await userAlreadyExists(shortRef, targetRef);
+    const exists = await userAlreadyExists(finalShortRef, normalizedTargetRef);
 
     if (!exists.error) {
       await closeDbConnection();
@@ -27,7 +55,7 @@ export class InsertController implements Controller{
       );
     }
 
-    const inserted = await insertUser(shortRef, targetRef);
+    const inserted = await insertUser(finalShortRef, normalizedTargetRef);
     await closeDbConnection();
     return created(inserted);
   }
