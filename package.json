@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun run index.ts"
+    "start": "bun run index.ts",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
