@@ -86,6 +86,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate Docker Hub credentials
+        run: |
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "❌ DOCKER_USERNAME secret não está configurado!"
+            echo "Configure em: Settings → Secrets and variables → Actions → Secrets"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "❌ DOCKER_PASSWORD secret não está configurado!"
+            echo "Configure em: Settings → Secrets and variables → Actions → Secrets"
+            exit 1
+          fi
+          echo "✅ Secrets do Docker Hub estão configurados"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -102,7 +116,6 @@ jobs:
           images: ${{ secrets.DOCKER_USERNAME }}/url-shortener
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
