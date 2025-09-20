@@ -1,31 +1,32 @@
-import { ServerError } from "../errors";
-import type { ErrorContext } from "elysia";
+import type { Context } from "elysia";
 
 export const badRequest = (
+  context: Context,
   error: Error | { [key: string]: any }
-): ErrorContext => ({
-  statusCode: 400,
-  body: error instanceof Error ? { error: error.message } : error,
-});
+) => {
+  context.set.status = 400;
+  return error instanceof Error ? { error: error.message } : error;
+};
 
 export const notFound = (
+  context: Context,
   error: Error | { [key: string]: any }
-): ErrorContext => ({
-  statusCode: 404,
-  body: error instanceof Error ? { error: error.message } : error,
-});
+) => {
+  context.set.status = 404;
+  return error instanceof Error ? { error: error.message } : error;
+};
 
-export const serverError = (): ErrorContext => ({
-  statusCode: 500,
-  body: { error: ServerError },
-});
+export const serverError = (context: Context) => {
+  context.set.status = 500;
+  return { error: "Internal server error" };
+};
 
-export const ok = (data: any): ErrorContext => ({
-  statusCode: 200,
-  body: data,
-});
+export const ok = (context: Context, data: any) => {
+  context.set.status = 200;
+  return data;
+};
 
-export const created = (data: any): ErrorContext => ({
-  statusCode: 201,
-  body: data,
-});
+export const created = (context: Context, data: any) => {
+  context.set.status = 201;
+  return data;
+};

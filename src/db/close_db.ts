@@ -1,7 +1,9 @@
-import { db } from "./client";
+import { client } from "./client";
 
 export async function closeDbConnection() {
-  if (db && typeof db.end === "function") {
-    await db.end();
+  try {
+    await client.end();
+  } catch {
+    // Silently handle connection close errors
   }
 }

@@ -5,10 +5,12 @@ import {
   validateAndNormalizeUrl,
   generateShortRef,
 } from "../helpers/url-helpers";
+import { badRequest, created, serverError } from "../helpers/http-helpers";
 import type { Context } from "elysia";
 
-export const insertController = async ({ body, query, set }: Context) => {
+export const insertController = async (context: Context) => {
   try {
+    const { body, query } = context;
     const { targetRef } = body as { targetRef?: string };
     const { shortRef: customShortRef } = (query as { shortRef?: string }) || {};
 
@@ -35,11 +37,11 @@ export const insertController = async ({ body, query, set }: Context) => {
     } else {
       finalShortRef = generateShortRef();
       let attempts = 0;
+
       while (attempts < 10) {
         const shortRefCheck = await shortRefExists(finalShortRef);
-        if (!shortRefCheck.exists) {
-          break;
-        }
+        if (!shortRefCheck.exists) break;
+
         finalShortRef = generateShortRef();
         attempts++;
       }
@@ -50,27 +52,16 @@ export const insertController = async ({ body, query, set }: Context) => {
     }
 
     const inserted = await insertUser(finalShortRef, normalizedTargetRef);
-
-    set.status = 201;
-    return inserted[0];
+    return created(context, inserted[0]);
   } catch (error) {
-    if (error instanceof MissingParamError) {
-      set.status = 400;
-      return { error: error.message };
+    if (
+      error instanceof MissingParamError ||
+      error instanceof ValidationError
+    ) {
+      return badRequest(context, error);
     }
 
-    if (error instanceof ValidationError) {
-      set.status = 400;
-      return { error: error.message };
-    }
-
-    if (error instanceof DatabaseError) {
-      set.status = 500;
-      return { error: error.message };
-    }
-
-    set.status = 500;
-    return { error: "Internal server error" };
+    return serverError(context);
   } finally {
     await closeDbConnection();
   }
