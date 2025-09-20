@@ -386,3 +386,5 @@ refactor: refatoração de código
 test: adiciona ou modifica testes
 chore: mudanças em ferramentas/configuração
 ```
+
+`
