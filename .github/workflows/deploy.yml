@@ -305,9 +305,8 @@ jobs:
         with:
           images: ${{ steps.image.outputs.image-name }}
           tags: |
-            type=ref,event=branch
+            type=raw,value=latest
             type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -330,7 +329,7 @@ jobs:
         run: |
           echo "🚀 Docker image deployed to Docker Hub!"
           echo "Repository: ${{ secrets.DOCKER_USERNAME }}/url-shortener"
-          echo "Tags pushed: latest, main-${{ github.sha }}"
+          echo "Tags pushed: latest, ${{ github.ref_name }}-${{ github.sha }}"
           echo ""
           echo "🐳 To use the deployed image:"
           echo "docker pull ${{ secrets.DOCKER_USERNAME }}/url-shortener:latest"
