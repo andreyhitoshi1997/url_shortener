@@ -59,23 +59,200 @@ jobs:
         env:
           DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
 
-      - name: Run tests (if any)
-        run: |
-          echo "No tests configured yet"
-
       - name: Start application
         run: |
           bun run start &
-          sleep 5
+          APP_PID=$!
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          echo "🚀 Application started with PID: $APP_PID"
+          sleep 8
         env:
           DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
 
-      - name: Test API endpoints
+      - name: Wait for application to be ready
         run: |
-          curl -f -X POST http://localhost:${{ env.PORT }}/api/shorten \
+          echo "⏳ Waiting for application to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:${{ env.PORT }}/api/search?shortRef=test > /dev/null; then
+              echo "✅ Application is ready!"
+              break
+            fi
+            echo "⏳ Attempt $i/30 - waiting 2 seconds..."
+            sleep 2
+          done
+
+      - name: Test API - Create Short URL
+        run: |
+          echo "🧪 Testing URL shortening endpoint..."
+          
+          # Test 1: Create a short URL
+          RESPONSE=$(curl -s -X POST http://localhost:${{ env.PORT }}/api/shorten \
             -H "Content-Type: application/json" \
-            -d '{"targetRef": "https://github.com"}' || exit 1
-          echo "API test passed!"
+            -d '{"targetRef": "https://github.com/andreyhitoshi1997"}')
+          
+          echo "📤 Response: $RESPONSE"
+          
+          # Extract shortRef from response
+          SHORT_REF=$(echo $RESPONSE | grep -o '"shortRef":"[^"]*"' | cut -d'"' -f4)
+          
+          if [ -z "$SHORT_REF" ]; then
+            echo "❌ Failed to extract shortRef from response"
+            exit 1
+          fi
+          
+          echo "✅ Short URL created successfully: $SHORT_REF"
+          echo "SHORT_REF=$SHORT_REF" >> $GITHUB_ENV
+
+      - name: Test API - Search Short URL
+        run: |
+          echo "🔍 Testing URL search endpoint..."
+          
+          # Test 2: Search for the created short URL
+          SEARCH_RESPONSE=$(curl -s http://localhost:${{ env.PORT }}/api/search?shortRef=${SHORT_REF})
+          
+          echo "📤 Search Response: $SEARCH_RESPONSE"
+          
+          # Check if the response contains the original URL
+          if echo "$SEARCH_RESPONSE" | grep -q "https://github.com/andreyhitoshi1997"; then
+            echo "✅ URL search test passed!"
+          else
+            echo "❌ URL search test failed - original URL not found"
+            exit 1
+          fi
+
+      - name: Test API - Error Handling
+        run: |
+          echo "🚨 Testing error handling..."
+          
+          # Test 3: Invalid URL
+          echo "Testing invalid URL..."
+          INVALID_RESPONSE=$(curl -s -w "%{http_code}" -X POST http://localhost:${{ env.PORT }}/api/shorten \
+            -H "Content-Type: application/json" \
+            -d '{"targetRef": "not-a-valid-url"}')
+          
+          HTTP_CODE=$(echo "$INVALID_RESPONSE" | tail -c 4)
+          
+          if [ "$HTTP_CODE" = "400" ]; then
+            echo "✅ Invalid URL test passed (HTTP 400)"
+          else
+            echo "❌ Invalid URL test failed - expected HTTP 400, got $HTTP_CODE"
+            exit 1
+          fi
+          
+          # Test 4: Missing parameter
+          echo "Testing missing parameter..."
+          MISSING_PARAM_RESPONSE=$(curl -s -w "%{http_code}" -X POST http://localhost:${{ env.PORT }}/api/shorten \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          
+          HTTP_CODE=$(echo "$MISSING_PARAM_RESPONSE" | tail -c 4)
+          
+          if [ "$HTTP_CODE" = "400" ]; then
+            echo "✅ Missing parameter test passed (HTTP 400)"
+          else
+            echo "❌ Missing parameter test failed - expected HTTP 400, got $HTTP_CODE"
+            exit 1
+          fi
+          
+          # Test 5: Non-existent short URL
+          echo "Testing non-existent short URL..."
+          NOT_FOUND_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:${{ env.PORT }}/api/search?shortRef=nonexistent123)
+          
+          HTTP_CODE=$(echo "$NOT_FOUND_RESPONSE" | tail -c 4)
+          
+          if [ "$HTTP_CODE" = "404" ]; then
+            echo "✅ Non-existent URL test passed (HTTP 404)"
+          else
+            echo "❌ Non-existent URL test failed - expected HTTP 404, got $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Test API - Bulk Operations
+        run: |
+          echo "📊 Testing bulk operations..."
+          
+          # Test 6: Create multiple URLs
+          URLS=("https://google.com" "https://github.com" "https://stackoverflow.com" "https://developer.mozilla.org")
+          SHORT_REFS=()
+          
+          for URL in "${URLS[@]}"; do
+            echo "Creating short URL for: $URL"
+            
+            RESPONSE=$(curl -s -X POST http://localhost:${{ env.PORT }}/api/shorten \
+              -H "Content-Type: application/json" \
+              -d "{\"targetRef\": \"$URL\"}")
+            
+            SHORT_REF=$(echo $RESPONSE | grep -o '"shortRef":"[^"]*"' | cut -d'"' -f4)
+            
+            if [ -z "$SHORT_REF" ]; then
+              echo "❌ Failed to create short URL for: $URL"
+              exit 1
+            fi
+            
+            SHORT_REFS+=("$SHORT_REF")
+            echo "✅ Created: $SHORT_REF -> $URL"
+          done
+          
+          # Test 7: Verify all created URLs
+          for i in "${!SHORT_REFS[@]}"; do
+            SHORT_REF="${SHORT_REFS[$i]}"
+            ORIGINAL_URL="${URLS[$i]}"
+            
+            echo "Verifying: $SHORT_REF -> $ORIGINAL_URL"
+            
+            SEARCH_RESPONSE=$(curl -s http://localhost:${{ env.PORT }}/api/search?shortRef=$SHORT_REF)
+            
+            if echo "$SEARCH_RESPONSE" | grep -q "$ORIGINAL_URL"; then
+              echo "✅ Verified: $SHORT_REF"
+            else
+              echo "❌ Verification failed for: $SHORT_REF"
+              exit 1
+            fi
+          done
+          
+          echo "🎉 All bulk operation tests passed!"
+
+      - name: Performance Test
+        run: |
+          echo "⚡ Running basic performance tests..."
+          
+          # Test 8: Response time check
+          START_TIME=$(date +%s%N)
+          
+          curl -s -X POST http://localhost:${{ env.PORT }}/api/shorten \
+            -H "Content-Type: application/json" \
+            -d '{"targetRef": "https://performance-test.com"}' > /dev/null
+          
+          END_TIME=$(date +%s%N)
+          DURATION=$((($END_TIME - $START_TIME) / 1000000)) # Convert to milliseconds
+          
+          echo "📊 URL creation took: ${DURATION}ms"
+          
+          if [ $DURATION -lt 1000 ]; then
+            echo "✅ Performance test passed (< 1000ms)"
+          else
+            echo "⚠️ Performance warning: response took ${DURATION}ms"
+          fi
+
+      - name: Cleanup and Summary
+        run: |
+          echo "🧹 Cleaning up..."
+          if [ ! -z "${APP_PID}" ]; then
+            kill ${APP_PID} || true
+            echo "🛑 Application stopped"
+          fi
+          
+          echo ""
+          echo "📋 Test Summary:"
+          echo "✅ URL Shortening"
+          echo "✅ URL Search"
+          echo "✅ Error Handling (Invalid URL)"
+          echo "✅ Error Handling (Missing Parameter)"
+          echo "✅ Error Handling (Not Found)"
+          echo "✅ Bulk Operations"
+          echo "✅ Performance Check"
+          echo ""
+          echo "🎉 All tests passed successfully!"
 
   docker-build-push:
     needs: test
@@ -99,6 +276,8 @@ jobs:
             exit 1
           fi
           echo "✅ Secrets do Docker Hub estão configurados"
+          echo "🐳 Username: ${{ secrets.DOCKER_USERNAME }}"
+          echo "🔑 Password: [HIDDEN]"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -109,11 +288,18 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Set Docker image name
+        id: image
+        run: |
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/url-shortener"
+          echo "image-name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "🐳 Image name: ${IMAGE_NAME}"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/url-shortener
+          images: ${{ steps.image.outputs.image-name }}
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-

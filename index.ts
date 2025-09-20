@@ -4,7 +4,7 @@ import { searchUrl } from "./src/controller/search";
 import { Elysia as App } from "elysia";
 
 const app = new App();
-const port = process.env.PORT || 3000;
+const SERVER_PORT = Number(process.env.PORT);
 
 app.post("/api/shorten", async ({ body, set }) => {
   const response = await insertUrl.handle({
@@ -24,6 +24,6 @@ app.get("/api/search", async ({ query, set }) => {
   return response.body;
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+app.listen(SERVER_PORT, () => {
+  console.log(`Server running on http://localhost:${SERVER_PORT}`);
 });
