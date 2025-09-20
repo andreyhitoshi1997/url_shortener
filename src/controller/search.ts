@@ -12,7 +12,6 @@ export const searchController = async ({ query, set }: Context) => {
     }
 
     const result = await findTargetByShortRef(shortRef);
-    await closeDbConnection();
 
     if (!result) {
       throw new NotFoundError("Short reference not found");
@@ -21,8 +20,6 @@ export const searchController = async ({ query, set }: Context) => {
     set.status = 200;
     return { targetRef: result };
   } catch (error) {
-    await closeDbConnection();
-
     if (error instanceof MissingParamError) {
       set.status = 400;
       return { error: error.message };
@@ -35,5 +32,7 @@ export const searchController = async ({ query, set }: Context) => {
 
     set.status = 500;
     return { error: "Internal server error" };
+  } finally {
+    await closeDbConnection();
   }
 };

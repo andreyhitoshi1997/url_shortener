@@ -50,13 +50,10 @@ export const insertController = async ({ body, query, set }: Context) => {
     }
 
     const inserted = await insertUser(finalShortRef, normalizedTargetRef);
-    await closeDbConnection();
 
     set.status = 201;
     return inserted[0];
   } catch (error) {
-    await closeDbConnection();
-
     if (error instanceof MissingParamError) {
       set.status = 400;
       return { error: error.message };
@@ -74,5 +71,7 @@ export const insertController = async ({ body, query, set }: Context) => {
 
     set.status = 500;
     return { error: "Internal server error" };
+  } finally {
+    await closeDbConnection();
   }
 };
