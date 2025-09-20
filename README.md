@@ -310,7 +310,7 @@ docker run -p 3000:3000 \
 
 ### Deploy na Produção
 
-O projeto está configurado para deploy automático via GitHub Actions. A imagem é publicada no Docker Hub e pode ser usada em qualquer ambiente:
+O projeto está configurado para deploy automático via GitHub Actions. A imagem é publicada no [Docker Hub](https://hub.docker.com/r/andreyhitoshi/url-shortener) e pode ser usada em qualquer ambiente:
 
 ```bash
 docker pull andreyhitoshi1997/url-shortener:latest
