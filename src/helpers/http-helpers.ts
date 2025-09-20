@@ -1,27 +1,31 @@
-import { type HttpResponse } from '../protocols/http'
-import { ServerError } from '../errors'
+import { ServerError } from "../errors";
+import type { ErrorContext } from "elysia";
 
-export const badRequest = (error: Error | { [key: string]: any }): HttpResponse => ({
+export const badRequest = (
+  error: Error | { [key: string]: any }
+): ErrorContext => ({
   statusCode: 400,
-  body: error instanceof Error ? { error: error.message } : error
-})
+  body: error instanceof Error ? { error: error.message } : error,
+});
 
-export const notFound = (error: Error | { [key: string]: any }): HttpResponse => ({
+export const notFound = (
+  error: Error | { [key: string]: any }
+): ErrorContext => ({
   statusCode: 404,
-  body: error instanceof Error ? { error: error.message } : error
-})
+  body: error instanceof Error ? { error: error.message } : error,
+});
 
-export const serverError = (): HttpResponse => ({
+export const serverError = (): ErrorContext => ({
   statusCode: 500,
-  body: { error: ServerError }
-})
+  body: { error: ServerError },
+});
 
-export const ok = (data: any): HttpResponse => ({
+export const ok = (data: any): ErrorContext => ({
   statusCode: 200,
-  body: data
-})
+  body: data,
+});
 
-export const created = (data: any): HttpResponse => ({
+export const created = (data: any): ErrorContext => ({
   statusCode: 201,
-  body: data
-})
+  body: data,
+});

@@ -1,29 +1,66 @@
 import "dotenv/config";
-import { insertUrl } from "./src/controller/insert";
-import { searchUrl } from "./src/controller/search";
-import { Elysia as App } from "elysia";
+import { insertController } from "./src/controller/insert";
+import { searchController } from "./src/controller/search";
+import { Elysia } from "elysia";
+import {
+  ValidationError,
+  NotFoundError,
+  DatabaseError,
+  MissingParamError,
+} from "./src/errors";
 
-const app = new App();
-const SERVER_PORT = Number(process.env.PORT);
+const app = new Elysia();
+const SERVER_PORT = Number(process.env.PORT) || 3000;
 
-app.post("/api/shorten", async ({ body, set }) => {
-  const response = await insertUrl.handle({
-    query: { shortRef: undefined, targetRef: undefined },
-    body,
-  });
-  set.status = response.statusCode;
-  return response.body;
+app.onError(({ code, error, set }) => {
+  switch (code) {
+    case "VALIDATION":
+      set.status = 400;
+      return { error: "Validation failed", details: error.message };
+
+    case "NOT_FOUND":
+      set.status = 404;
+      return { error: "Route not found" };
+
+    default:
+      if (error instanceof MissingParamError) {
+        set.status = 400;
+        return { error: error.message };
+      }
+
+      if (error instanceof ValidationError) {
+        set.status = 400;
+        return { error: error.message };
+      }
+
+      if (error instanceof NotFoundError) {
+        set.status = 404;
+        return { error: error.message };
+      }
+
+      if (error instanceof DatabaseError) {
+        set.status = 500;
+        return { error: error.message };
+      }
+
+      console.error("Unhandled error:", error);
+      set.status = 500;
+      return { error: "Internal server error" };
+  }
 });
 
-app.get("/api/search", async ({ query, set }) => {
-  const { shortRef } = query as { shortRef: any };
-  const response = await searchUrl.handle({
-    query: { shortRef, targetRef: undefined },
-  });
-  set.status = response.statusCode;
-  return response.body;
-});
+app.post("/api/shorten", insertController);
+app.get("/api/search", searchController);
+
+app.get("/health", () => ({
+  status: "ok",
+  timestamp: new Date().toISOString(),
+}));
 
 app.listen(SERVER_PORT, () => {
-  console.log(`Server running on http://localhost:${SERVER_PORT}`);
+  console.log(`🚀 Server running on http://localhost:${SERVER_PORT}`);
+  console.log(`📡 API endpoints:`);
+  console.log(`   POST /api/shorten - Create short URL`);
+  console.log(`   GET  /api/search  - Find original URL`);
+  console.log(`   GET  /health     - Health check`);
 });

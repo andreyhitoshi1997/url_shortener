@@ -1,25 +1,39 @@
-import { findTargetByShortRef } from '../usecases/find_short_ref';
-import { closeDbConnection } from '../db/close_db';
-import type { HttpResponse, HttpRequest } from '../protocols/http';
-import { notFound, ok } from '../helpers/http-helpers';
-import type { Controller } from '../protocols/controller';
+import { findTargetByShortRef } from "../usecases/find_short_ref";
+import { closeDbConnection } from "../db/close_db";
+import { MissingParamError, NotFoundError } from "../errors";
+import type { Context } from "elysia";
 
-export class SearchController implements Controller {
-    async handle(request: HttpRequest): Promise<HttpResponse> {
-        const { shortRef } = request.query;
-        
-        if (!shortRef) {
-            await closeDbConnection();
-            return notFound({ message: 'Short reference is required' });
-        }
-    
-        const result = await findTargetByShortRef(shortRef);
-        await closeDbConnection();
-        if (!result) {
-            return notFound({ message: 'Short reference not found' });
-        }
-        return ok({ targetRef: result });
+export const searchController = async ({ query, set }: Context) => {
+  try {
+    const { shortRef } = query as { shortRef?: string };
+
+    if (!shortRef) {
+      throw new MissingParamError("shortRef");
     }
-}
 
-export const searchUrl = new SearchController();
+    const result = await findTargetByShortRef(shortRef);
+    await closeDbConnection();
+
+    if (!result) {
+      throw new NotFoundError("Short reference not found");
+    }
+
+    set.status = 200;
+    return { targetRef: result };
+  } catch (error) {
+    await closeDbConnection();
+
+    if (error instanceof MissingParamError) {
+      set.status = 400;
+      return { error: error.message };
+    }
+
+    if (error instanceof NotFoundError) {
+      set.status = 404;
+      return { error: error.message };
+    }
+
+    set.status = 500;
+    return { error: "Internal server error" };
+  }
+};

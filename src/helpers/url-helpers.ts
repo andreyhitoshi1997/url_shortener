@@ -117,11 +117,3 @@ export function generateShortRef(length: number = 6): string {
   }
   return result;
 }
-
-export function generateShortUrl(
-  baseUrl: string = "http://localhost:3000",
-  length: number = 6
-): string {
-  const shortCode = generateShortRef(length);
-  return `${baseUrl}/${shortCode}`;
-}
