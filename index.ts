@@ -46,6 +46,16 @@ const app = new Elysia()
     }
   })
   .post("/api/shorten", insertController)
+  .post("/api/insert", async (context) => {
+    const { body } = context;
+    const { originalUrl } = body as { originalUrl?: string };
+
+    if (originalUrl) {
+      context.body = { targetRef: originalUrl };
+    }
+
+    return insertController(context);
+  })
   .get("/api/search", searchController)
   .get("/health", () => ({
     status: "ok",
