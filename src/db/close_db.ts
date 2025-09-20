@@ -3,7 +3,8 @@ import { client } from "./client";
 export async function closeDbConnection() {
   try {
     await client.end();
-  } catch {
-    // Silently handle connection close errors
+  } catch (error) {
+    console.error("Failed to close database connection:", error);
+    throw error;
   }
 }
