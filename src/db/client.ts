@@ -1,35 +1,25 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Client } from "pg";
-import { urlReference } from "./schemas/url_reference";
+import { Pool } from "pg";
+import * as schema from "./schema";
 
-export const client = new Client({
+export const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
-export const db = drizzle(client, { schema: { urlReference } });
+export const db = drizzle(pool, { schema });
 
-let isConnected = false;
-let isConnecting = false;
+process.on("SIGINT", async () => {
+  console.log("Closing database pool...");
+  await pool.end();
+  process.exit(0);
+});
 
-export const ensureConnection = async (): Promise<void> => {
-  if (isConnected) return;
-
-  if (isConnecting) {
-    while (isConnecting) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    return;
-  }
-
-  isConnecting = true;
-
-  try {
-    await client.connect();
-    isConnected = true;
-    isConnecting = false;
-  } catch (error) {
-    isConnecting = false;
-    throw error;
-  }
-};
+process.on("SIGTERM", async () => {
+  console.log("Closing database pool...");
+  await pool.end();
+  process.exit(0);
+});

@@ -1,10 +1,11 @@
-import { client } from "./client";
+import { pool } from "./client";
 
 export async function closeDbConnection() {
   try {
-    await client.end();
+    await pool.end();
+    console.log("Database pool closed successfully");
   } catch (error) {
-    console.error("Failed to close database connection:", error);
+    console.error("Failed to close database pool:", error);
     throw error;
   }
 }
