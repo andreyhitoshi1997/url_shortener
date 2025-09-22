@@ -1,6 +1,6 @@
 # 🔗 URL Shortener
 
-> **Um encurtador de URLs moderno, rápido e seguro construído com Bun, TypeScript, Elysia e PostgreSQL.**
+> **Um encurtador de URLs moderno, rápido e seguro construído com Bun, TypeScript, Elysia e PostgreSQL. Arquitetura limpa com Object Calisthenics e melhores práticas do Drizzle ORM.**
 
 ## 📋 Índice
 
@@ -11,6 +11,7 @@
 - [Instalação](#-instalação)
 - [Uso](#-uso)
 - [API Reference](#-api-reference)
+- [Swagger Documentation](#-swagger-documentation)
 - [Desenvolvimento](#-desenvolvimento)
 - [Deploy](#-deploy)
 - [CI/CD](#-cicd)
@@ -18,18 +19,21 @@
 
 ## 🎯 Sobre o Projeto
 
-Este é um serviço de encurtamento de URLs que permite converter URLs longas em links curtos e fáceis de compartilhar. O projeto foi desenvolvido com foco em performance, escalabilidade e boas práticas de desenvolvimento.
+Este é um serviço de encurtamento de URLs que permite converter URLs longas em links curtos e fáceis de compartilhar. O projeto foi desenvolvido com foco em performance, escalabilidade, código limpo e melhores práticas de desenvolvimento, seguindo princípios de **Clean Architecture** e **Object Calisthenics**.
 
 ### ⭐ Funcionalidades
 
 - ✅ **Encurtamento de URLs** - Transforma URLs longas em links curtos
-- ✅ **Redirecionamento rápido** - Busca eficiente de URLs originais
-- ✅ **Validação robusta** - Validação completa de URLs de entrada
-- ✅ **Geração automática** - Códigos curtos únicos gerados automaticamente
-- ✅ **API REST** - Interface simples e intuitiva
-- ✅ **Persistência** - Armazenamento em PostgreSQL
-- ✅ **Containerização** - Deploy com Docker
-- ✅ **CI/CD** - Integração e deploy automáticos
+- ✅ **ShortRef Customizado** - Permite definir códigos personalizados
+- ✅ **Redirecionamento rápido** - Busca eficiente com pool de conexões
+- ✅ **Validação robusta** - Camada de validação separada e especializada
+- ✅ **Geração automática** - Algoritmo otimizado com timestamp + random
+- ✅ **API REST documentada** - Interface com Swagger/OpenAPI
+- ✅ **Métricas e Analytics** - Contagem de acessos e estatísticas
+- ✅ **Pool de Conexões** - PostgreSQL otimizado para produção
+- ✅ **Persistência avançada** - Schema otimizado com índices estratégicos
+- ✅ **Containerização** - Deploy com Docker e graceful shutdown
+- ✅ **Arquitetura Limpa** - Object Calisthenics e SOLID principles
 
 ## 🛠 Tecnologias
 
@@ -38,48 +42,55 @@ Este é um serviço de encurtamento de URLs que permite converter URLs longas em
 | **Runtime**         | [Bun](https://bun.com)                  | 1.x    | Runtime JavaScript/TypeScript ultra-rápido |
 | **Framework**       | [Elysia](https://elysiajs.com)          | 1.4.5  | Framework web moderno para Bun             |
 | **Linguagem**       | TypeScript                              | 5.x    | Superset tipado do JavaScript              |
-| **Banco de Dados**  | PostgreSQL                              | 17     | Banco relacional robusto                   |
-| **ORM**             | [Drizzle ORM](https://orm.drizzle.team) | 0.44.5 | ORM TypeScript-first                       |
+| **Banco de Dados**  | PostgreSQL                              | 17     | Banco relacional com Pool de conexões      |
+| **ORM**             | [Drizzle ORM](https://orm.drizzle.team) | 0.44.5 | ORM TypeScript-first com melhores práticas |
+| **Documentação**    | Swagger/OpenAPI                         | 3.0    | Documentação interativa da API             |
 | **Containerização** | Docker                                  | -      | Containerização da aplicação               |
 | **Linter**          | ESLint                                  | 9.x    | Análise estática de código                 |
 | **Formatter**       | Prettier                                | 3.6.2  | Formatação de código                       |
 
 ## 🏗 Arquitetura
 
-O projeto segue os princípios de **Clean Architecture** e **SOLID**, organizando o código em camadas bem definidas:
+O projeto segue os princípios de **Clean Architecture**, **SOLID** e **Object Calisthenics**, organizando o código em camadas bem definidas com separação clara de responsabilidades:
 
 ```
 src/
-├── controller/          # Camada de Controle (HTTP)
-│   ├── insert.ts       # Controller para criação de URLs curtas
-│   └── search.ts       # Controller para busca de URLs
-├── usecases/           # Camada de Casos de Uso (Business Logic)
-│   ├── insert_url_shortener.ts
-│   └── find_short_ref.ts
-├── db/                 # Camada de Dados
-│   ├── client.ts       # Cliente do banco de dados
-│   ├── schema.ts       # Schemas do banco
-│   └── schemas/
-│       └── url_reference.ts
-├── helpers/            # Utilitários
-│   ├── http-helpers.ts # Helpers para HTTP
-│   └── url-helpers.ts  # Validação e geração de URLs
-├── protocols/          # Interfaces e Contratos
-│   ├── controller.ts
-│   └── http.ts
-└── errors/            # Tratamento de Erros
+├── controller/                    # Camada de Controle (HTTP)
+│   ├── insert-controller.ts      # Controller para criação de URLs curtas
+│   └── search-controller.ts      # Controller para busca de URLs
+├── services/                     # Camada de Serviços (Business Logic)
+│   └── url-service.ts            # Lógica de negócio unificada
+├── validators/                   # Validação de Dados (Object Calisthenics)
+│   ├── request-validator.ts      # Validação de requests HTTP
+│   └── url-validator.ts          # Validação específica de URLs
+├── db/                          # Camada de Dados
+│   ├── client.ts                # Pool de conexões PostgreSQL
+│   ├── repository/              # Repositórios de dados
+│   │   └── url-repository.ts    # Operações CRUD + analytics
+│   ├── schema.ts                # Schemas do banco unificados
+│   └── schemas/                 # Definições específicas
+│       └── url_reference.ts     # Schema da tabela principal
+├── generators/                  # Utilitários de Geração
+│   └── short-ref-generator.ts   # Geração otimizada de códigos curtos
+├── helpers/                     # Utilitários
+│   ├── http-helpers.ts          # Helpers para HTTP
+│   └── url-helpers.ts           # Validação e geração de URLs
+└── errors/                      # Tratamento de Erros
     ├── index.ts
     ├── missing-param-error.ts
     └── server-error.ts
 ```
 
-### � Padrões Arquiteturais
+### 🔧 Padrões Arquiteturais
 
-- **Repository Pattern** - Abstração da camada de dados
-- **Controller Pattern** - Separação da lógica HTTP
-- **Dependency Injection** - Baixo acoplamento entre camadas
-- **Error Handling** - Tratamento centralizado de erros
-- **Clean Code** - Código limpo e bem documentado
+- **Clean Architecture** - Separação rigorosa em camadas com inversão de dependência
+- **Object Calisthenics** - Separação de validações da lógica de negócio
+- **Repository Pattern** - Abstração completa da camada de dados
+- **Service Layer** - Centralização da lógica de negócio
+- **Pool Connections** - Otimização de conexões com PostgreSQL
+- **Validator Classes** - Validações especializadas e reutilizáveis
+- **Error Handling** - Tratamento centralizado e tipado de erros
+- **Graceful Shutdown** - Fechamento elegante de conexões
 
 ## 🚀 Instalação
 
@@ -157,19 +168,30 @@ bun run docker:down
 ### Exemplo Básico
 
 ```bash
-# 1. Encurtar uma URL
+# 1. Encurtar uma URL com código automático
 curl -X POST http://localhost:3000/api/shorten \
   -H "Content-Type: application/json" \
   -d '{"targetRef": "https://www.google.com"}'
 
 # Resposta:
-# {"id": "uuid", "shortRef": "abc123", "targetRef": "https://www.google.com"}
+# {"id": "uuid", "shortRef": "2024abc", "targetRef": "https://www.google.com"}
 
-# 2. Buscar URL original
-curl "http://localhost:3000/api/search?shortRef=abc123"
+# 2. Encurtar uma URL com código personalizado
+curl -X POST "http://localhost:3000/api/shorten?shortRef=google" \
+  -H "Content-Type: application/json" \
+  -d '{"targetRef": "https://www.google.com"}'
+
+# Resposta:
+# {"id": "uuid", "shortRef": "google", "targetRef": "https://www.google.com"}
+
+# 3. Buscar URL original
+curl "http://localhost:3000/api/search?shortRef=google"
 
 # Resposta:
 # {"targetRef": "https://www.google.com"}
+
+# 4. Acessar documentação Swagger
+curl "http://localhost:3000/swagger"
 ```
 
 ### Scripts Disponíveis
@@ -180,17 +202,44 @@ bun run start              # Inicia a aplicação
 bun run docker:up         # Sobe ambiente completo
 bun run docker:down       # Para ambiente Docker
 
-# Banco de dados
+# Banco de dados (Drizzle ORM)
 bunx drizzle-kit generate  # Gera migrações
 bunx drizzle-kit migrate   # Executa migrações
-bunx drizzle-kit studio    # Interface visual do banco
+bunx drizzle-kit studio    # Interface visual do banco (Drizzle Studio)
+bunx drizzle-kit check     # Verifica consistência das migrações
+
+# Qualidade de código
+bunx eslint src/           # Análise estática
+bunx prettier --write .    # Formatação automática
+
+# Testes e validação
+curl "http://localhost:3000/"              # Health check
+curl "http://localhost:3000/swagger"       # Swagger documentation
 ```
 
 ## 📡 API Reference
 
+### Health Check
+
+#### GET `/`
+
+Verifica se a aplicação está funcionando.
+
+**Response (200):**
+
+```json
+{
+  "message": "URL Shortener API is running"
+}
+```
+
 ### POST `/api/shorten`
 
-Cria uma URL encurtada.
+Cria uma URL encurtada com código automático ou personalizado.
+
+**Query Parameters (Opcional):**
+
+- `shortRef` (string) - Código personalizado para a URL (deve ser único)
 
 **Request Body:**
 
@@ -205,7 +254,7 @@ Cria uma URL encurtada.
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "shortRef": "abc123",
+  "shortRef": "2024abc", // ou código personalizado se fornecido
   "targetRef": "https://exemplo.com/url-muito-longa"
 }
 ```
@@ -213,11 +262,11 @@ Cria uma URL encurtada.
 **Códigos de Status:**
 
 - `201` - URL criada com sucesso
-- `400` - Parâmetros inválidos ou URL malformada
+- `400` - Parâmetros inválidos, URL malformada ou shortRef já existe
 
 ### GET `/api/search`
 
-Busca a URL original através da referência curta.
+Busca a URL original através da referência curta e incrementa contador de acesso.
 
 **Query Parameters:**
 
@@ -234,18 +283,44 @@ Busca a URL original através da referência curta.
 **Códigos de Status:**
 
 - `200` - URL encontrada
+- `400` - Parâmetro shortRef obrigatório
 - `404` - URL não encontrada
+
+## 📚 Swagger Documentation
+
+A aplicação inclui documentação interativa com Swagger/OpenAPI acessível em:
+
+- **Local**: http://localhost:3000/swagger
+- **Produção**: https://seu-dominio.com/swagger
+
+### Recursos do Swagger
+
+- ✅ **Interface interativa** - Teste endpoints diretamente no navegador
+- ✅ **Documentação completa** - Esquemas de request/response detalhados
+- ✅ **Validação em tempo real** - Feedback imediato sobre parâmetros
+- ✅ **Exemplos práticos** - Casos de uso para cada endpoint
 
 ### Exemplos de Uso
 
 ```javascript
-// Encurtar URL
+// Encurtar URL com código automático
 const response = await fetch("http://localhost:3000/api/shorten", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ targetRef: "https://github.com" }),
 });
 const { shortRef } = await response.json();
+
+// Encurtar URL com código personalizado
+const customResponse = await fetch(
+  "http://localhost:3000/api/shorten?shortRef=github",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetRef: "https://github.com" }),
+  }
+);
+const { shortRef: customRef } = await customResponse.json();
 
 // Buscar URL original
 const searchResponse = await fetch(
@@ -259,12 +334,39 @@ const { targetRef } = await searchResponse.json();
 ### Estrutura do Banco de Dados
 
 ```sql
--- Tabela principal
+-- Tabela principal com campos otimizados
 CREATE TABLE url_reference (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  short_ref TEXT NOT NULL,
-  target_ref TEXT NOT NULL
+  short_ref TEXT NOT NULL UNIQUE,           -- Índice único para performance
+  target_ref TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  access_count INTEGER DEFAULT 0           -- Contador de acessos
 );
+
+-- Índices estratégicos para performance
+CREATE UNIQUE INDEX idx_short_ref ON url_reference(short_ref);
+CREATE INDEX idx_created_at ON url_reference(created_at);
+```
+
+### Pool de Conexões PostgreSQL
+
+O projeto utiliza **Pool de Conexões** para otimização de performance:
+
+```typescript
+// Configuração do Pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 20, // Máximo 20 conexões simultâneas
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// Graceful shutdown
+process.on("SIGINT", async () => {
+  await pool.end();
+  process.exit(0);
+});
 ```
 
 ### Comandos Úteis
@@ -275,24 +377,101 @@ bunx eslint src/          # Executar linter
 bunx prettier --write .   # Formatar código
 
 # Banco de dados
-bunx drizzle-kit studio   # Interface visual
+bunx drizzle-kit studio   # Interface visual Drizzle Studio
 bunx drizzle-kit check    # Verificar migrações
+bunx drizzle-kit generate # Gerar novas migrações
+bunx drizzle-kit migrate  # Aplicar migrações
 
 # Docker
-docker logs url_shortener_app    # Logs da aplicação
+docker logs url_shortener_app                    # Logs da aplicação
 docker exec -it postgres_dev psql -U postgres -d url_shortener_dev
+docker-compose up --build -d                     # Rebuild completo
+
+# Testes de carga e validação
+curl "http://localhost:3000/"                    # Health check
+curl "http://localhost:3000/swagger"             # Swagger UI
+```
+
+### Object Calisthenics - Validações
+
+O projeto implementa **Object Calisthenics** para separar validações da lógica de negócio:
+
+```typescript
+// src/validators/request-validator.ts
+export class RequestValidator {
+  static validateInsertRequest(data: any): string {
+    if (!data?.targetRef) {
+      return "Missing required parameter: targetRef";
+    }
+    return "";
+  }
+}
+
+// src/validators/url-validator.ts
+export class UrlValidator {
+  static validateUrl(url: string): string {
+    try {
+      new URL(url);
+      return "";
+    } catch {
+      return "Invalid URL format";
+    }
+  }
+}
+```
+
+### Service Layer - Business Logic
+
+Lógica de negócio centralizada e limpa:
+
+```typescript
+// src/services/url-service.ts
+export async function insertUrlService(
+  targetRef: string,
+  customShortRef?: string
+) {
+  // Validações usando Object Calisthenics
+  const requestError = RequestValidator.validateInsertRequest({ targetRef });
+  if (requestError) throw new MissingParamError(requestError);
+
+  const urlError = UrlValidator.validateUrl(targetRef);
+  if (urlError) throw new MissingParamError(urlError);
+
+  // Lógica de negócio
+  const shortRef = customShortRef || generateShortRef();
+  return await urlRepository.create({ shortRef, targetRef });
+}
 ```
 
 ### Variáveis de Ambiente
 
-| Variável            | Obrigatória | Padrão | Descrição                    |
-| ------------------- | ----------- | ------ | ---------------------------- |
-| `PORT`              | Não         | `3000` | Porta da aplicação           |
-| `DATABASE_URL`      | Sim         | -      | String de conexão PostgreSQL |
-| `POSTGRES_USER`     | Sim         | -      | Usuário do PostgreSQL        |
-| `POSTGRES_PASSWORD` | Sim         | -      | Senha do PostgreSQL          |
-| `POSTGRES_DB`       | Sim         | -      | Nome do banco de dados       |
-| `POSTGRES_PORT`     | Não         | `5432` | Porta do PostgreSQL          |
+| Variável            | Obrigatória | Padrão | Descrição                             |
+| ------------------- | ----------- | ------ | ------------------------------------- |
+| `PORT`              | Não         | `3000` | Porta da aplicação                    |
+| `DATABASE_URL`      | Sim         | -      | String de conexão PostgreSQL com Pool |
+| `POSTGRES_USER`     | Sim         | -      | Usuário do PostgreSQL                 |
+| `POSTGRES_PASSWORD` | Sim         | -      | Senha do PostgreSQL                   |
+| `POSTGRES_DB`       | Sim         | -      | Nome do banco de dados                |
+| `POSTGRES_PORT`     | Não         | `5432` | Porta do PostgreSQL                   |
+
+### Algoritmo de Geração de ShortRef
+
+O projeto usa um algoritmo otimizado que combina timestamp com aleatoriedade:
+
+```typescript
+export function generateShortRef(): string {
+  const timestamp = Date.now().toString(36); // Base36 timestamp
+  const random = Math.random().toString(36); // Random string
+  return (timestamp + random).substring(0, 7); // 7 caracteres únicos
+}
+```
+
+**Vantagens:**
+
+- ✅ **Unicidade temporal** - Timestamp garante ordem cronológica
+- ✅ **Collision-resistant** - Aleatoriedade reduz colisões
+- ✅ **Performance** - Geração rápida sem consultas ao banco
+- ✅ **Legível** - Formato Base36 (0-9, a-z)
 
 ## 🚢 Deploy
 
@@ -302,18 +481,55 @@ docker exec -it postgres_dev psql -U postgres -d url_shortener_dev
 # 1. Build da imagem
 docker build -t url-shortener .
 
-# 2. Execute o container
+# 2. Execute o container com Pool de conexões
 docker run -p 3000:3000 \
-  -e DATABASE_URL="sua_connection_string" \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db?max=20" \
   url-shortener
 ```
 
 ### Deploy na Produção
 
-O projeto está configurado para deploy automático via GitHub Actions. A imagem é publicada na conta oficial do meu usuário [Docker Hub](https://hub.docker.com/u/andreyhitoshi) e pode ser usada em qualquer ambiente:
+O projeto está configurado para deploy automático via GitHub Actions. A imagem é publicada na conta oficial do Docker Hub e pode ser usada em qualquer ambiente:
 
 ```bash
+# Pull da imagem oficial
 docker pull andreyhitoshi1997/url-shortener:latest
+
+# Executar em produção
+docker run -d -p 3000:3000 \
+  -e DATABASE_URL="sua_connection_string_com_pool" \
+  --name url-shortener-prod \
+  andreyhitoshi1997/url-shortener:latest
+```
+
+### Deploy com Docker Compose
+
+```yaml
+# docker-compose.prod.yml
+version: "3.8"
+services:
+  app:
+    image: andreyhitoshi1997/url-shortener:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/url_shortener?max=20
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: url_shortener
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
 ```
 
 ## 🔄 CI/CD
