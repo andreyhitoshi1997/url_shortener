@@ -51,6 +51,20 @@ export class UrlRepository {
     }
   }
 
+  async findByTargetRef(targetRef: string): Promise<UrlRecord | null> {
+    try {
+      const result = await db
+        .select()
+        .from(urlReference)
+        .where(eq(urlReference.targetRef, targetRef))
+        .limit(1);
+
+      return result[0] || null;
+    } catch (error) {
+      throw new DatabaseError("Failed to search URL by target reference");
+    }
+  }
+
   async incrementAccessCount(shortRef: string): Promise<void> {
     try {
       await db

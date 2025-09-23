@@ -1,8 +1,9 @@
 import { UrlRepository } from "../db";
 import { RequestValidator } from "../validators/request-validator";
 import { UrlValidator } from "../validators/url-validator";
+import { TargetRefValidator } from "../validators/target-ref-validator";
 import { ShortRefGenerator } from "./short-ref-generator";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ValidationError } from "../errors";
 
 export interface ShortenUrlRequest {
   targetRef: string;
@@ -10,7 +11,9 @@ export interface ShortenUrlRequest {
 }
 
 export interface ShortenUrlResponse {
+  id: string;
   shortRef: string;
+  targetRef: string;
 }
 
 export interface FindUrlResponse {
@@ -22,9 +25,17 @@ export async function insertUrlService(
 ): Promise<ShortenUrlResponse> {
   RequestValidator.validateTargetRef(request.targetRef);
 
+  // Validação de protocolo HTTP/HTTPS
+  TargetRefValidator.validateProtocol(request.targetRef);
+
   const urlValidator = new UrlValidator(request.targetRef);
   const normalizedUrl = urlValidator.validate();
 
+  // Validação de unicidade da URL
+  const targetRefValidator = new TargetRefValidator(normalizedUrl);
+  await targetRefValidator.validateUniqueness();
+
+  // Criar novo registro
   const generator = new ShortRefGenerator();
   const shortRef = generator.generate(request.customShortRef);
 
@@ -34,8 +45,14 @@ export async function insertUrlService(
     targetRef: normalizedUrl,
   });
 
+  // Gerar a URL completa do shortRef
+  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+  const shortUrl = `${baseUrl}/${created.shortRef}`;
+
   return {
-    shortRef: created.shortRef,
+    id: created.id,
+    shortRef: shortUrl,
+    targetRef: created.targetRef,
   };
 }
 

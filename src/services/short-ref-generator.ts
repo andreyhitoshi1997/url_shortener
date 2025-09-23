@@ -1,4 +1,4 @@
-import { generateShortRef } from "../helpers/url-helpers";
+import { generateShortRef } from "../generators/short-ref-generator";
 
 export class ShortRefGenerator {
   generate(customShortRef?: string): string {

@@ -59,26 +59,27 @@ src/
 │   ├── insert-controller.ts      # Controller para criação de URLs curtas
 │   └── search-controller.ts      # Controller para busca de URLs
 ├── services/                     # Camada de Serviços (Business Logic)
-│   └── url-service.ts            # Lógica de negócio unificada
+│   ├── url-service.ts            # Lógica de negócio unificada
+│   └── short-ref-generator.ts    # Classe geradora de shortRef
 ├── validators/                   # Validação de Dados (Object Calisthenics)
 │   ├── request-validator.ts      # Validação de requests HTTP
-│   └── url-validator.ts          # Validação específica de URLs
+│   ├── url-validator.ts          # Validação específica de URLs
+│   └── target-ref-validator.ts   # Validação de unicidade e protocolo
+├── generators/                   # Algoritmos de Geração
+│   └── short-ref-generator.ts    # Função pura de geração de códigos
 ├── db/                          # Camada de Dados
 │   ├── client.ts                # Pool de conexões PostgreSQL
+│   ├── index.ts                 # Exports centralizados da camada DB
 │   ├── repository/              # Repositórios de dados
 │   │   └── url-repository.ts    # Operações CRUD + analytics
 │   ├── schema.ts                # Schemas do banco unificados
 │   └── schemas/                 # Definições específicas
 │       └── url_reference.ts     # Schema da tabela principal
-├── generators/                  # Utilitários de Geração
-│   └── short-ref-generator.ts   # Geração otimizada de códigos curtos
 ├── helpers/                     # Utilitários
-│   ├── http-helpers.ts          # Helpers para HTTP
-│   └── url-helpers.ts           # Validação e geração de URLs
+│   ├── http-helpers.ts          # Helpers para HTTP responses
+│   └── url-helpers.ts           # Validação e normalização de URLs
 └── errors/                      # Tratamento de Erros
-    ├── index.ts
-    ├── missing-param-error.ts
-    └── server-error.ts
+    └── index.ts                 # Todas as classes de erro centralizadas
 ```
 
 ### 🔧 Padrões Arquiteturais
