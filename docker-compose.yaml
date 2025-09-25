@@ -2,6 +2,7 @@ services:
   app:
     build: .
     container_name: url_shortener_app
+    env_file: "./.env"
     ports:
       - "${PORT}:${PORT}"
     depends_on:
