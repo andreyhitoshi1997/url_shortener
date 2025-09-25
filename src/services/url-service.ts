@@ -2,7 +2,7 @@ import { UrlRepository } from "../db";
 import { RequestValidator } from "../validators/request-validator";
 import { UrlValidator } from "../validators/url-validator";
 import { TargetRefValidator } from "../validators/target-ref-validator";
-import { ShortRefGenerator } from "./short-ref-generator";
+import { generateShortRef } from "../generators/short-ref-generator";
 import { NotFoundError, ValidationError } from "../errors";
 
 export interface ShortenUrlRequest {
@@ -33,8 +33,7 @@ export async function insertUrlService(
   const targetRefValidator = new TargetRefValidator(normalizedUrl);
   await targetRefValidator.validateUniqueness();
 
-  const generator = new ShortRefGenerator();
-  const shortRef = generator.generate(request.customShortRef);
+  const shortRef = request.customShortRef || generateShortRef();
 
   const repository = new UrlRepository();
   const created = await repository.create({

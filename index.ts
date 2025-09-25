@@ -1,8 +1,7 @@
 import "dotenv/config";
 import { Elysia, t } from "elysia";
 import { swagger } from "@elysiajs/swagger";
-import { insertController } from "./src/controller/insert-controller";
-import { searchController } from "./src/controller/search-controller";
+import { urlShortener } from "./src/controller/elysia-controller";
 import {
   ValidationError,
   NotFoundError,
@@ -61,60 +60,7 @@ const app = new Elysia()
         return { error: "Internal server error" };
     }
   })
-  .post("/api/shorten", insertController, {
-    body: t.Object({
-      targetRef: t.String({
-        description: "The URL to be shortened",
-        example: "https://github.com",
-      }),
-    }),
-    detail: {
-      tags: ["URL"],
-      summary: "Shorten a URL",
-      description:
-        "Create a short reference for a given URL. Optionally specify a custom short reference via query parameter.",
-    },
-  })
-  .post(
-    "/api/insert",
-    async (context) => {
-      const { body } = context;
-      const { originalUrl } = body as { originalUrl?: string };
-
-      if (originalUrl) {
-        (context.body as any) = { targetRef: originalUrl };
-      }
-
-      return insertController(context);
-    },
-    {
-      body: t.Object({
-        originalUrl: t.String({
-          description: "The original URL to be shortened (legacy endpoint)",
-          example: "https://github.com",
-        }),
-      }),
-      detail: {
-        tags: ["URL"],
-        summary: "Shorten a URL (Legacy)",
-        description:
-          "Legacy endpoint for URL shortening. Maps originalUrl to targetRef.",
-      },
-    }
-  )
-  .get("/api/search", searchController, {
-    query: t.Object({
-      shortRef: t.String({
-        description: "The short reference to look up",
-        example: "FNlELp",
-      }),
-    }),
-    detail: {
-      tags: ["URL"],
-      summary: "Find original URL",
-      description: "Retrieve the original URL from a short reference.",
-    },
-  })
+  .use(urlShortener)
   .get(
     "/health",
     () => ({
