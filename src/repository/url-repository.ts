@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
-import { db } from "../client";
-import { urlReference } from "../schemas/url_reference";
-import { DatabaseError } from "../../errors";
+import { db } from "../db/client";
+import { urlReference } from "../db/schemas/url_reference";
+import { DatabaseError } from "../errors";
 
 export interface UrlRecord {
   id: string;
